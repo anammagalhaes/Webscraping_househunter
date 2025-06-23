@@ -1,0 +1,157 @@
+🏗️ Projeto de Web Scraping Imobiliário – Idealista, OLX, Imovirtual (Resumo Técnico)
+🎯 Objetivo
+O objetivo do projeto foi criar um sistema de coleta de dados imobiliários de sites em Portugal, com possibilidade de expansão para coleta de notícias e outros dados no futuro. A ideia era criar um scraper reutilizável, modular e eficiente, que salve os dados em CSV, para futuras análises.
+
+🔶 ETAPA 1 – Primeira versão do scraper (Idealista com requests e BeautifulSoup)
+O que fizemos:
+Criamos o projeto com pastas (scrapers/) e o arquivo main.py.
+
+Tentamos coletar imóveis da página do Idealista usando:
+
+python
+Copiar
+Editar
+import requests
+from bs4 import BeautifulSoup
+❌ Problema:
+O requests só acessa o HTML estático.
+
+O conteúdo da lista de imóveis do Idealista é carregado por JavaScript.
+
+Resultado: 0 imóveis encontrados, CSV vazio.
+
+✅ Solução aplicada:
+Migramos para o uso do Selenium, que abre o navegador de verdade e renderiza o conteúdo dinamicamente.
+
+🔷 ETAPA 2 – Usando Selenium para acessar o Idealista
+O que fizemos:
+Implementamos o scraping com Selenium (ChromeDriver via webdriver_manager).
+
+Adicionamos tratamento de cookies:
+
+python
+Copiar
+Editar
+EC.element_to_be_clickable((By.ID, "didomi-notice-agree-button"))
+✅ Resultado:
+O navegador abriu corretamente.
+
+A página do Idealista foi carregada.
+
+Começamos a coletar os imóveis com título, preço e link.
+
+Salvamos em CSV com sucesso.
+
+🔶 ETAPA 3 – Primeira quebra: CAPTCHA do Idealista
+❌ Problema:
+Após rodar algumas vezes, o Idealista passou a exibir um CAPTCHA (anti-bot).
+
+O Selenium tradicional foi detectado.
+
+✅ Solução proposta:
+Usar undetected-chromedriver (não foi implementado ainda, mas recomendado).
+
+Adicionar time.sleep() para dar tempo do usuário resolver o CAPTCHA manualmente.
+
+🔷 ETAPA 4 – Adição de suporte a múltiplos sites (scrape(site))
+O que fizemos:
+Refatoramos o código para aceitar diferentes sites como parâmetro.
+
+Criamos um dicionário com URLs:
+
+python
+Copiar
+Editar
+SITE_URLS = {
+    "idealista": "...",
+    "olx": "...",
+    "casasapo": "...",
+    "imovirtual": "..."
+}
+Estruturamos o scraping com if site == ... para adaptar seletores por site.
+
+🟠 ETAPA 5 – Tentativa com OLX
+❌ Problema:
+A primeira URL testada estava incorreta → página “não encontrada”.
+
+✅ Solução:
+Corrigimos manualmente a URL após acessar diretamente pelo navegador.
+
+Resultado: navegador abriu, mas o HTML da OLX é diferente do Idealista.
+
+✅ Solução adicional:
+Adaptamos os seletores específicos da OLX com:
+
+python
+Copiar
+Editar
+"div[data-cy='l-card']"
+Extraímos título, preço e link com base no novo HTML.
+
+🔵 ETAPA 6 – Tentativa com Imovirtual
+O que fizemos:
+Usamos Selenium para abrir a página com resultados de imóveis em Lisboa.
+
+❌ Problemas sucessivos:
+Seletores como h2, p[data-cy='listing-item-price'] não existiam.
+
+Erros do tipo no such element.
+
+O site carrega conteúdo dinamicamente com JavaScript → os dados ainda não estavam no DOM quando o Selenium tentava buscar.
+
+✅ Tentativas de mitigação:
+Adicionamos WebDriverWait e time.sleep()
+
+Inspecionamos o HTML real e testamos outros seletores.
+
+✅ Solução definitiva:
+Abandonamos seletores fixos para preço.
+
+Pegamos o .text do link do anúncio e procuramos manualmente a linha com "€".
+
+python
+Copiar
+Editar
+linhas = anuncio.text.split("\n")
+preco = next((linha for linha in linhas if "€" in linha), "Preço não encontrado")
+Assim, conseguimos coletar imóveis mesmo que o HTML mude.
+
+🔒 ETAPA 7 – Prevenção de bloqueios e boas práticas
+Riscos identificados:
+Sites que detectam automação podem bloquear IPs ou mostrar CAPTCHA.
+
+Carregamento lento pode causar falha na leitura dos elementos.
+
+✅ Boas práticas implementadas:
+Uso de WebDriverWait
+
+Uso de time.sleep() entre interações
+
+Adição da opção de headless=False para ver o navegador funcionando
+
+Recomendação de uso do modo anônimo (--incognito) se necessário
+
+Proposta de undetected-chromedriver para casos de bloqueio
+
+🧾 RESULTADO FINAL
+✅ Scraper funcional para Idealista
+
+✅ Scraper funcional para Imovirtual
+
+✅ Estrutura pronta para OLX e Casa Sapo
+
+✅ Dados salvos automaticamente em .csv com nome por site
+
+✅ Lógica adaptável para qualquer novo site no futuro
+
+🗃️ Por que manter esse histórico armazenado?
+📖 Documentação técnica completa: você sabe o que foi feito e por quê.
+
+🧩 Facilita manutenção: se algo parar de funcionar, sabe exatamente onde mexer.
+
+🔁 Reutilização de estrutura: você pode reaproveitar pra scraping de notícias, dados de mercado, etc.
+
+🔐 Compliance: mostra que você respeitou boas práticas e conteúdo público.
+
+🧪 Aprendizado consolidado: é uma aula prática de scraping moderno.
+

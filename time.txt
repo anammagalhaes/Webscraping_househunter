@@ -1,0 +1,131 @@
+📅 RELATO DE DESENVOLVIMENTO DO SCRAPER IMOBILIÁRIO – 3 DIAS
+✅ Dia 1 – Início do projeto e primeira estrutura (terça-feira)
+🎯 Objetivo definido:
+Criar um sistema de webscraping para coletar dados de imóveis em sites portugueses, com foco inicial no Idealista, e visão futura de incluir notícias e dados complementares.
+
+🛠️ O que foi feito:
+Estruturamos o projeto com:
+
+Um arquivo main.py
+
+Um módulo de scrapers (scrapers/idealista.py)
+
+Primeira tentativa de scraping com:
+
+python
+Copiar
+Editar
+import requests
+from bs4 import BeautifulSoup
+❌ Problema:
+Não retornou nenhum imóvel.
+
+A estrutura HTML carregada pelo requests não continha os imóveis visíveis no site.
+
+📌 Causa:
+O Idealista carrega seu conteúdo dinamicamente via JavaScript, o que não é interpretado pelo requests.
+
+✅ Solução:
+Migramos para o Selenium, que simula um navegador real e renderiza o JS da página.
+
+✅ Dia 2 – Selenium e scraping funcional no Idealista (quarta-feira de manhã)
+🧪 Primeiros testes com Selenium:
+Usamos webdriver.Chrome() com ChromeDriverManager para automatizar o navegador.
+
+Adicionamos um clique automático para aceitar os cookies:
+
+python
+Copiar
+Editar
+By.ID, "didomi-notice-agree-button"
+✅ Resultado:
+Imóveis foram encontrados corretamente.
+
+Dados de título, preço e link extraídos.
+
+Dados salvos em CSV com sucesso.
+
+❌ Problemas enfrentados:
+Após alguns testes, o Idealista passou a mostrar um CAPTCHA de puzzle.
+
+O site detectou que o navegador era automatizado.
+
+✅ Soluções consideradas:
+Usar undetected-chromedriver (para evitar detecção de bots).
+
+Inserimos time.sleep() para permitir que o usuário resolva o CAPTCHA manualmente.
+
+✅ Dia 3 – Expansão para múltiplos sites (quinta-feira de manhã)
+🌐 Objetivo:
+Adaptar o scraper para funcionar também com OLX e Imovirtual.
+
+Tornar o código reutilizável com:
+
+python
+Copiar
+Editar
+def scrape(site):
+    ...
+🟠 Tentativa com OLX:
+Corrigimos a URL manualmente.
+
+HTML do OLX era diferente do Idealista → criamos novos seletores.
+
+Resultado: scraping funcional com blocos div[data-cy='l-card'].
+
+🔵 Tentativa com Imovirtual:
+Usamos Selenium para abrir a página de apartamentos em Lisboa.
+
+Vários seletores testados falharam (h2, p[data-cy='listing-item-price']).
+
+O conteúdo do Imovirtual também é carregado dinamicamente por JS.
+
+❌ Problemas:
+no such element nos preços e títulos.
+
+HTML diferente entre a navegação manual e a DOM que o Selenium acessa.
+
+✅ Solução final para Imovirtual:
+Em vez de procurar um seletor exato, pegamos o .text do link e extraímos o preço de qualquer linha com "€".
+
+python
+Copiar
+Editar
+texto = anuncio.text
+preco = next((linha for linha in texto.split("\n") if "€" in linha), "Preço não encontrado")
+✅ Resultado:
+Scraper 100% funcional no Imovirtual.
+
+Salvando os dados corretamente no imovirtual_imoveis.csv.
+
+🧠 Conclusão geral (pra fechar quinta-feira)
+O projeto cresceu de uma simples ideia de requests + bs4 para um sistema robusto com Selenium.
+
+Aprendemos a lidar com páginas que usam JavaScript pesado.
+
+Implementamos estratégias para:
+
+Renderizar dinamicamente
+
+Lidar com CAPTCHAs
+
+Adaptar o scraping à estrutura de cada site
+
+Agora temos:
+
+Scraper modular
+
+Idealista funcionando
+
+Imovirtual funcionando
+
+OLX pronto para expandir
+
+Suporte a outros sites e fontes futuras (notícias, dados públicos)
+
+🗣️ Dica de como apresentar:
+Quarta de manhã:
+“Ontem começamos o projeto tentando usar requests e BeautifulSoup, mas vimos que o Idealista carrega o conteúdo com JavaScript. Isso nos levou a usar Selenium, onde conseguimos finalmente coletar os imóveis. Também aprendemos a lidar com pop-ups de cookies e começamos a pensar numa estrutura que permitisse adaptar para outros sites."
+
+Quinta de manhã:
+“Hoje evoluímos o scraper para funcionar com OLX e Imovirtual. Encontramos dificuldades com a estrutura dinâmica do Imovirtual, mas resolvemos de forma criativa: lendo o texto completo do card e extraindo o preço com base em conteúdo. Agora temos um sistema modular, preparado para múltiplas fontes e fácil de manter."
